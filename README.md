@@ -1,0 +1,2 @@
+# Task-4_ImplementAESChunkinAPI_BahasaKita
+Mengimplementasikan enkripsi AES dari data yang telah di chunk kedalam API serta membuat RECIEVE API untuk memberikan respons dari proses enkripsi kepada klient
