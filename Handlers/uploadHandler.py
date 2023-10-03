@@ -5,6 +5,8 @@ from AES_utils import decrypt_data,encrypt_data
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
 from Handlers.socketHanlder import ProgressWebSocket
+from datetime import datetime
+from config.db import db
 
 class UploadHandler(tornado.web.RequestHandler):
     async def post(self):
@@ -13,24 +15,29 @@ class UploadHandler(tornado.web.RequestHandler):
             file_content = uploaded_file['body']
             # Membuat ID unik
             unique_id = self.create_unique_id()
+            verify_collection = db.db["DataVerify"]
 
-            print("sukses")
-            # Enkripsi file
-            # decrypted_data = await decrypt_data(file_content)
+            time = datetime.now()
+            times = [f"{time.year}:{time.month}:{time.day}", f"{time.hour}:{time.minute}:{time.second}"]
+            
+            json_data = {
+                    "_id" : unique_id,
+                    "date" :  times[0],
+                    "time" : times[1]
+                }
+            verify_collection.insert_one(json_data)
             
             # Inisialisasi progres WebSocket
             def progress_callback(progress):
                 for instance in ProgressWebSocket.instances:
                     instance.send_progress(progress)
 
-            decrypted_data = await decrypt_data(file_content, progress_callback)
+            # decrypted_data = await decrypt_data(file_content, progress_callback)
+            await decrypt_data(file_content, times, progress_callback)
 
             for instance in ProgressWebSocket.instances:
                 instance.send_complete()
             # Simpan file terenkripsi
-            decrypted_filename = os.path.join("Uploads", unique_id)
-            with open(decrypted_filename, "wb") as decrypted_file:
-                decrypted_file.write(decrypted_data)
 
             self.write({"message": "Proses selesai"})
 

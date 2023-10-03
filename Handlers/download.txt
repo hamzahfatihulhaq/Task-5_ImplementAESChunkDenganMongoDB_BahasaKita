@@ -6,7 +6,6 @@ from config.db import db
 from bson import ObjectId
 import uuid
 import time
-# import numpy as np
 
 BATCH_SIZE = int(1 * 1024 * 1024)
 
@@ -43,18 +42,9 @@ class DownloadHandler(tornado.web.RequestHandler):
             
             # Encode setiap string dalam list ke dalam format UTF-8
             data_list = [item.encode('utf-8') for item in data_list]
-            # print(data_list)
+            print(data_list)
             start_time = time.time()
-            # chunked_data = self.chunk_data(b''.join(data_list))
-
-            chunked_data =[]
-            for chunk in self.chunk_data(b''.join(data_list)):
-                # Proses atau kirim chunk ke tujuan Anda di sini
-                # print("Chunk size:", len(chunk))
-                chunked_data.append(chunk)
-            
-            print(chunked_data[-1])
-            # len(chunked_data)
+            chunked_data = self.chunk_data(b''.join(data_list))
             print(time.time() - start_time)
             
             # Dekripsi file
@@ -69,10 +59,9 @@ class DownloadHandler(tornado.web.RequestHandler):
             for instance in ProgressWebSocket.instances:
                 instance.send_complete()
 
-            filename = filename+'.csv'
             # Set header agar browser mengenali kontennya sebagai file
             self.set_header('Content-Type', 'application/octet-stream')
-            self.set_header('Content-Disposition', f'attachment; filename={filename}')
+            self.set_header('Content-Disposition', f'attachment; filename={filename}.csv')
             
             # Kirim data terdekripsi ke browser
             self.write(encrypted_data)
@@ -96,11 +85,19 @@ class DownloadHandler(tornado.web.RequestHandler):
             return {"error": "Invalid audio ID format"}
 
     def chunk_data(self, data, chunk_size=1024 * 1024):  # 1MB
-        data_length = len(data)
-        num_chunks = (data_length + chunk_size - 1) // chunk_size  # Hitung jumlah chunk
-        print(num_chunks)
-        for i in range(num_chunks):
-            start = i * chunk_size
-            end = min((i + 1) * chunk_size, data_length)
-            chunk = data[start:end]
-            yield chunk
+        chunks = []
+        current_chunk = b''
+
+        # print(len(current_chunk))
+        for byte in data:
+            if len(current_chunk)<chunk_size:
+                current_chunk += bytes([byte])
+
+            else:
+                chunks.append(current_chunk)
+                current_chunk = bytes([byte])
+
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        return chunks

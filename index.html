@@ -91,12 +91,15 @@
                 if (blob.size > 0) {
                     // Membuat URL objek untuk blob
                     var url = window.URL.createObjectURL(blob);
-                    console.log(input.value);
+                    
                     // Buat elemen link untuk unduhan
                     var a = document.createElement("a");
                     a.style.display = "none";
                     a.href = url;
-                    a.download = idAudio;  
+
+                    // Mengatur tipe konten menjadi CSV dan menambahkan ekstensi .csv ke nama berkas
+                    a.setAttribute("download", idAudio + ".csv");
+                    console.log(idAudio + ".csv");
                     document.body.appendChild(a);
 
                     // Klik link secara otomatis untuk memulai unduhan
